@@ -44,7 +44,21 @@ export async function fetchAllData() {
         }
 
         state.children = childrenRes.data || [];
-        state.medicines = (medicinesRes.data || []).map(m => {
+        const allMedicines = (medicinesRes.data || []).map(m => {
+    if (typeof m.times === 'string') {
+        try { m.times = JSON.parse(m.times); } catch(e) { m.times = []; }
+    }
+    if (!Array.isArray(m.times)) m.times = [];
+    return m;
+});
+
+const activeIssueIds = (issuesRes.data || [])
+    .filter(i => i.status === 'active')
+    .map(i => i.id);
+
+state.medicines = allMedicines.filter(m =>
+    activeIssueIds.includes(m.issue_id)
+);
             if (typeof m.times === 'string') {
                 try { m.times = JSON.parse(m.times); } catch(e) { m.times = []; }
             }
