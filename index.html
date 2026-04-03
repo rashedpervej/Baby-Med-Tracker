@@ -75,7 +75,10 @@
     <!-- Medicines -->
     <main id="view-meds" class="view">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="font-size: 18px;">Medicines List</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="font-size: 18px;">Medicines List</h2>
+                <button class="btn btn-primary btn-small" onclick="openMedModal()">+ Add</button>
+            </div>
             <select id="med-filter-issue" class="btn-small" style="padding: 5px 10px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); background: var(--surface-solid); color: var(--text-main);" onchange="renderMeds()">
                 <option value="all">All Issues</option>
                 <option value="none">No Issue</option>
