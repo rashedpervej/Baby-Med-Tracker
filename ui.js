@@ -1,5 +1,5 @@
 import { state, saveSettings } from './state.js';
-import { signUp, signIn, signOut, resetPassword } from './supabase.js';
+import { signUp, signIn, signOut, resetPassword, supabaseClient } from './supabase.js';
 
 // --- AUTH UI ---
 export async function handleSignUp() {
@@ -228,6 +228,18 @@ export function customAlert(message, title = "Alert") {
     openModal('modal-alert');
 }
 
+export function showIssueRequiredModal() {
+    document.getElementById('alert-title').innerText = "Issue Required";
+    document.getElementById('alert-message').innerText = "Please create an active Issue first before adding medicine.";
+    document.getElementById('alert-actions').innerHTML = `
+        <div class="flex-3-1">
+            <button class="btn btn-primary btn-3" onclick="window.closeModal('modal-alert'); window.openIssueModal();">+ New Issue</button>
+            <button class="btn btn-outline btn-1" onclick="window.closeModal('modal-alert')">OK</button>
+        </div>
+    `;
+    openModal('modal-alert');
+}
+
 export function customConfirm(message, onConfirm, title = "Confirm") {
     document.getElementById('alert-title').innerText = title;
     document.getElementById('alert-message').innerText = message;
@@ -435,22 +447,51 @@ export function addTimeRow(time = '') {
 }
 
 // --- AUTOCOMPLETE ---
-export function handleMedNameInput(val) {
+export async function handleMedNameInput(val) {
     const list = document.getElementById('med-autocomplete-list');
     list.innerHTML = '';
-    if (!val) return;
+    if (!val || val.length < 1) return;
     
-    const matches = state.medicineMaster.filter(m => m.name.toLowerCase().includes(val.toLowerCase()));
-    
-    matches.forEach(match => {
-        const div = document.createElement('div');
-        div.innerHTML = `<strong>${match.name.substr(0, val.length)}</strong>${match.name.substr(val.length)}`;
-        div.onclick = () => {
-            document.getElementById('med-name').value = match.name;
-            list.innerHTML = '';
-        };
-        list.appendChild(div);
-    });
+    try {
+        const { data, error } = await supabaseClient
+            .from('medicine_master')
+            .select('name')
+            .ilike('name', `%${val}%`)
+            .order('name')
+            .limit(50);
+            
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+            data.forEach(match => {
+                const div = document.createElement('div');
+                // Highlight the match
+                const regex = new RegExp(`(${val})`, 'gi');
+                const highlightedName = match.name.replace(regex, '<strong>$1</strong>');
+                div.innerHTML = highlightedName;
+                div.onclick = () => {
+                    document.getElementById('med-name').value = match.name;
+                    list.innerHTML = '';
+                };
+                list.appendChild(div);
+            });
+        }
+    } catch (err) {
+        console.error("Error fetching medicine suggestions:", err);
+        // Fallback to local search if database query fails
+        const matches = state.medicineMaster.filter(m => m.name.toLowerCase().includes(val.toLowerCase())).slice(0, 50);
+        matches.forEach(match => {
+            const div = document.createElement('div');
+            const regex = new RegExp(`(${val})`, 'gi');
+            const highlightedName = match.name.replace(regex, '<strong>$1</strong>');
+            div.innerHTML = highlightedName;
+            div.onclick = () => {
+                document.getElementById('med-name').value = match.name;
+                list.innerHTML = '';
+            };
+            list.appendChild(div);
+        });
+    }
 }
 
 // --- ISSUE MGMT ---
