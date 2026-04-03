@@ -2,7 +2,7 @@ import { state, notifiedMeds, saveSettings } from './state.js';
 import { testConnection, onAuthStateChange, getUser } from './supabase.js';
 import { fetchAllData, saveProfile } from './api.js';
 import { 
-    showLoading, customAlert, applySettings, 
+    showLoading, customAlert, showIssueRequiredModal, applySettings, 
     getYYYYMMDD, playBeep, playVoice, 
     openModal, closeModal,
     addTimeRow, showAuthView,
@@ -159,7 +159,7 @@ export function openMedModal(editId = null, preSelectedIssueId = null) {
     // Check if any active issues exist
     const activeIssues = state.issues.filter(i => i.child_id.toString() === state.activeChildId.toString() && i.status === 'active');
     if (activeIssues.length === 0) {
-        return customAlert("Please create an active Issue first before adding medicine.", "Issue Required");
+        return showIssueRequiredModal();
     }
 
     const c = document.getElementById('med-times-container');
