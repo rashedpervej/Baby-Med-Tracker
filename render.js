@@ -55,7 +55,16 @@ export function renderHome() {
     const nowTime = new Date().toTimeString().substring(0,5); // HH:MM
 
     let schedule = [];
-    const activeMeds = state.medicines.filter(m => m.child_id.toString() === state.activeChildId.toString() && m.start_date <= today && m.end_date >= today);
+    const activeIssueIds = state.issues
+  .filter(i => i.status === 'active')
+  .map(i => i.id);
+
+const activeMeds = state.medicines.filter(m =>
+  m.child_id.toString() === state.activeChildId.toString() &&
+  m.start_date <= today &&
+  m.end_date >= today &&
+  activeIssueIds.includes(m.issue_id)
+);
     
     activeMeds.forEach(m => {
         m.times.forEach(t => {
@@ -153,7 +162,7 @@ export function renderMeds() {
     container.innerHTML = '';
     if(!state.activeChildId) return;
 
-    let meds = state.medicines.filter(m => m.child_id.toString() === state.activeChildId.toString());
+    const activeIssueIds = state.issues   .filter(i => i.status === 'active')   .map(i => i.id);  let meds = state.medicines.filter(m =>   m.child_id.toString() === state.activeChildId.toString() &&   activeIssueIds.includes(m.issue_id) );
     
     if (selectedIssue !== 'all') {
         meds = meds.filter(m => m.issue_id && m.issue_id.toString() === selectedIssue.toString());
